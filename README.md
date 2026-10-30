@@ -17,7 +17,7 @@ Tests: `python -m pytest tests/` (4 tests, mocked YTMusic, no account needed).
 ```
 brew install python
 brew install python-tk
-git clone https://github.com/Epsilon0xCell/spotify_to_ytmusic.git && cd spotify_to_ytmusic
+git clone https://github.com/Epsilon0xCell/Spotify-To-YTMusic.git && cd spotify_to_ytmusic
 python3 -m venv .venv
 source .venv/bin/activate
 pip3 install ytmusicapi
