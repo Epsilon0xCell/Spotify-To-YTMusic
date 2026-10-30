@@ -8,10 +8,18 @@ from argparse import ArgumentParser
 
 
 def reverse_playlist(input_file="playlists.json", verbose=True, replace=False) -> int:
+    # I check for the file first. This used to go straight to the backup
+    # copy, and a missing input file died inside shutil.copyfile with a
+    # FileNotFoundError traceback instead of one plain error line.
     if not os.path.exists(input_file):
         print(f"ERROR: Input file not found: {input_file}")
         return 1
 
+    # The output of this script is the input file itself, rewritten. So
+    # this refusal is not really about a second file existing. It is a
+    # guard on the -r flag: if I did not pass -r, I have not said out loud
+    # that I accept overwriting the only copy I am standing on, backup
+    # or not, and the script stops.
     if not replace:
         if verbose:
             print(
@@ -20,6 +28,12 @@ def reverse_playlist(input_file="playlists.json", verbose=True, replace=False) -
         return 1
 
     print("Backing up file...")
+    # splitext, not split("."). Splitting on every dot turned
+    # ./playlists.json into a backup named _backup.json in the current
+    # directory and cut a path like sub.dir/data.json off at the
+    # directory name. The backup has to land next to its source, under a
+    # name I can find again, because it is the only way back if the
+    # reversal below writes a bad file.
     backup_file = os.path.splitext(input_file)[0] + "_backup.json"
     shutil.copyfile(input_file, backup_file)
     # Load the JSON file
@@ -29,6 +43,11 @@ def reverse_playlist(input_file="playlists.json", verbose=True, replace=False) -
         data = json.load(file)
 
     # Copy the data to a new dictionary
+    # This copy is shallow and I know it: the playlist dicts inside are
+    # shared with data, and the reversal below replaces their tracks
+    # lists in place. That is fine here because nothing after this point
+    # reads the original order from memory. The original order survives
+    # in the backup file on disk, not in this process.
     data2 = data.copy()
 
     if verbose:
@@ -54,6 +73,10 @@ def reverse_playlist(input_file="playlists.json", verbose=True, replace=False) -
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("input_file", type=str, help="Path to the input file")
+    # Verbose defaults to on and -v used to be store_false, which meant
+    # passing the flag that claimed to enable verbose actually silenced
+    # the script. Now -v and --no-verbose write the same dest from two
+    # sides, so the flag I pass says what it does.
     parser.add_argument(
         "-v",
         "--verbose",
@@ -76,4 +99,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # sys.exit around the call matters. This used to call the function
+    # and throw its return value away, so the refusal above exited 0 and
+    # any script wrapping this one read a stopped run as a success.
     sys.exit(reverse_playlist(args.input_file, args.verbose, args.replace))

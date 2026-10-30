@@ -5,6 +5,11 @@ import sys
 import inspect
 
 def list_commands(module):
+    # I build the command list from the functions actually sitting in cli
+    # instead of keeping a typed list here. A typed list drifts: I add a
+    # function to cli, forget this file, and the help text lies. This way
+    # the usage message and the check below can only name commands that
+    # exist right now.
     # include only functions defined in e.g. 'cli' module
     commands = [name for name, obj in inspect.getmembers(module) if inspect.isfunction(obj)]
     return commands
@@ -17,6 +22,11 @@ if len(sys.argv) < 2:
     print("       For example, try 'spotify2ytmusic list_playlists'")
     sys.exit(1)
 
+# I test membership in the function list instead of using hasattr on the
+# module. hasattr would also accept names that are not commands at all,
+# like a module cli happened to import, and then the call below would try
+# to run something that was never a command. The error names the bad
+# command because "unknown command" alone does not tell me what I typed.
 if sys.argv[1] not in available_commands:
     print(
         f"ERROR: Unknown command '{sys.argv[1]}', see https://github.com/linsomniac/spotify_to_ytmusic"

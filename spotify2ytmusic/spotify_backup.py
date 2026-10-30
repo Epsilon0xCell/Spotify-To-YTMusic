@@ -152,6 +152,11 @@ def main(dump="playlists,liked", format="json", file="playlists.json", token="")
     # List liked albums and songs
     if "liked" in dump:
         print("Loading liked albums and songs...")
+        # I use the me/ endpoints here and for playlists below. They
+        # resolve to whoever the token belongs to, so the request does not
+        # depend on building a users/<id> path out of the profile data.
+        # The .format call left on this string fills nothing, since the
+        # endpoint no longer has a placeholder in it.
         liked_tracks = spotify.list(
             "me/tracks".format(user_id=user_id_escaped), {"limit": 50}
         )
@@ -187,6 +192,13 @@ def main(dump="playlists,liked", format="json", file="playlists.json", token="")
             for playlist in playlists:
                 f.write(playlist["name"] + "\r\n")
                 for track in playlist["tracks"]:
+                    # Podcast episodes show up inside playlists with type
+                    # "episode". The text writer below reads album fields
+                    # that an episode does not carry the way a song does,
+                    # and a podcast episode is not a song I can copy
+                    # anywhere, so I leave episodes out of the text dump.
+                    # The JSON dump above keeps them; this skip is only
+                    # for this writer.
                     if track["track"] is None or track["track"]["type"] == "episode":
                         continue
                     f.write(
@@ -242,4 +254,8 @@ if __name__ == "__main__":
         help="Output format: json or a tab separated format (default: json)",
     )
     cli_args = parser.parse_args()
+    # The defaults above match the values main() used to be called with,
+    # so the plain documented invocation behaves the same as before. The
+    # difference is only that a different file, dump, or format typed on
+    # the command line now actually takes effect.
     main(dump=cli_args.dump, format=cli_args.format, file=cli_args.file)

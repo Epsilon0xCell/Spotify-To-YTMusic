@@ -216,6 +216,10 @@ class Window:
             command=lambda: self.call_func(
                 func=backend.copy_playlist,
                 args=(
+                    # I strip the Spotify id because it usually arrives
+                    # pasted out of a browser or a share link, carrying
+                    # spaces or a trailing newline with it. backend looks
+                    # the id up exactly, so a padded id finds nothing.
                     self.spotify_playlist_id.get().strip(),
                     self.yt_playlist_id.get(),
                     "utf-8",
@@ -318,6 +322,16 @@ class Window:
                         sys.exit(1)
                     process.communicate()
                 else:  # For Unix and Linux
+                    # I run ytmusicapi as a Python module instead of
+                    # asking for a terminal emulator. The old code tried
+                    # x-terminal-emulator and then xterm, and a machine
+                    # with neither installed had no way to open the oauth
+                    # flow at all. python3 has to exist for this app to be
+                    # running, so the module call rests on less. One weak
+                    # spot I know about: subprocess.call does not raise
+                    # when the command fails, it returns the exit code,
+                    # and nobody here checks that code, so a failed oauth
+                    # run can pass quietly.
                     try:
                         subprocess.call(
                             "python3 -m ytmusicapi oauth",

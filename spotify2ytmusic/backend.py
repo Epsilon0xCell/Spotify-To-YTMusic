@@ -381,6 +381,12 @@ def copier(
         print(f"Spotify:   {src_track.title} - {src_track.artist} - {src_track.album}")
 
         # Retry song lookup indefinitely until successful
+        # I split lookup failures into two kinds on purpose. Not found is
+        # an answer about the track, so it gets 3 tries and then I move
+        # on. Anything else looks like a network or API problem that may
+        # clear, so it sleeps and loops without spending those 3 tries.
+        # The price of that split: error_count grows on both paths, but
+        # only the not found path can ever skip the track.
         dst_track = None
         retries = 0
         max_retries = 3  # Limit for specific error retries
@@ -425,6 +431,10 @@ def copier(
         if dst_track["videoId"] in tracks_added_set:
             print("(DUPLICATE, this track has already been added)")
             duplicate_count += 1
+            # I stop here instead of falling through. The set already told
+            # me this videoId went in during this run, and falling through
+            # would call add_playlist_items a second time and lean on the
+            # API side duplicates flag to clean up after me.
             continue
         tracks_added_set.add(dst_track["videoId"])
 
@@ -432,6 +442,13 @@ def copier(
             exception_sleep = 5
 
             # Retry playlist addition indefinitely until successful
+            # No attempt limit here, on purpose: the lookup above already
+            # found the track, and I would rather wait out a bad network
+            # stretch than lose a copy that has been running for an hour.
+            # The wait is capped at 320 seconds below so a long outage
+            # does not double the delay into hours. I know the trade: if
+            # the API rejects this videoId for a permanent reason, this
+            # loop never gives up on its own.
             while True:
                 try:
                     if dst_pl_id is not None:
@@ -488,6 +505,13 @@ def copy_playlist(
                 if len(pl.keys()) > 3 and pl["id"] == spotify_playlist_id:
                     pl_name = pl["name"]
 
+        # I look the name up again inside this branch, even if the "+name"
+        # path above already did. That first lookup only runs for the
+        # "+name" form. A plain empty id also lands here, and without this
+        # second lookup I would create a fresh playlist on every run even
+        # when one with this name is already on the account, stacking up
+        # same name duplicates. Reuse first, create only if the lookup
+        # still finds nothing.
         ytmusic_playlist_id = get_playlist_id_by_name(yt, pl_name)
 
         #  create_playlist returns a dict if there was an error

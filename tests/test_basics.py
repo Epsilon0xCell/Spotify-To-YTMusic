@@ -13,6 +13,9 @@ def make_fixture():
     """Return a temp playlists file based on tests/playliststest.json, extended
     with a "Liked Songs" playlist and a liked album, which the shipped fixture
     does not contain."""
+    # I extend a temp copy instead of editing the shipped fixture. The
+    # file on disk stays the plain export shape it always was, and a test
+    # run leaves nothing behind in the repo for the next run to trip on.
     with open("tests/playliststest.json") as f:
         data = json.load(f)
 
@@ -65,6 +68,9 @@ def make_mock_yt():
     }
 
     def search(query, filter=None):
+        # Album searches return nothing on purpose. These tests exercise
+        # the playlist and liked songs paths, and an album hit would send
+        # the copier down a branch none of them assert anything about.
         if filter == "albums":
             return []
         return [song]
@@ -78,6 +84,11 @@ class TestCopier(unittest.TestCase):
     def setUp(self):
         self.fixture = make_fixture()
         self.mock_yt = make_mock_yt()
+        # I patch get_ytmusic in backend, where the name actually lives.
+        # These tests used to patch spotify2ytmusic.cli.YTMusic, a name
+        # that stopped existing when the logic moved into backend.py, and
+        # the whole suite failed on the patch target before testing
+        # anything. No test in this file touches a real account.
         patcher = patch.object(
             backend, "get_ytmusic", return_value=self.mock_yt
         )
