@@ -1,10 +1,25 @@
+![spotify_to_ytmusic banner](banner.png)
+
+# This fork
+
+This is a fork of linsomniac/spotify_to_ytmusic with local changes by the owner:
+retry handling in the backend copier (a track that cannot be found is skipped
+after 3 retries instead of being retried forever, for every search algorithm),
+copy_playlist reusing an existing YTMusic playlist of the same name instead of
+always creating a new one, a command list in the `python -m spotify2ytmusic`
+usage output, argument parsing in spotify_backup.py (its documented file,
+--dump and --format arguments were previously ignored), and the workflow
+notes below. The upstream README follows the fork notes.
+
+Tests: `python -m pytest tests/` (4 tests, mocked YTMusic, no account needed).
+
 # Running:
 ```
 brew install python
 brew install python-tk
-git clone https://github.com/CY83R-3X71NC710N/spotify_to_ytmusic.git && cd spotify_to_ytmusic
-python3 -m venv path/to/venv
-source path/to/venv/bin/activate
+git clone https://github.com/Epsilon0xCell/spotify_to_ytmusic.git && cd spotify_to_ytmusic
+python3 -m venv .venv
+source .venv/bin/activate
 pip3 install ytmusicapi
 ytmusicapi oauth
 cd spotify2ytmusic && python3 spotify_backup.py playlists.json --dump=liked,playlists --format=json
@@ -15,7 +30,7 @@ python -u -m spotify2ytmusic load_liked --track-sleep=3 --algo 0 2>&1 | tee -a l
 ```
 
 # For Highest Accuracy of songs:
-Run this commnad
+Run this command
 
 ```
 python -u -m spotify2ytmusic load_liked --track-sleep=3 --algo 0 2>&1 | tee -a log.txt && python -u -m spotify2ytmusic load_liked_albums --track-sleep=3 --algo 0 2>&1 | tee -a log.txt && python -u -m spotify2ytmusic copy_all_playlists --track-sleep=3 --algo 0 --privacy PRIVATE 2>&1 | tee -a log.txt
@@ -29,12 +44,12 @@ Run the terminal application to transfer all playlists with a time to sleep of 3
 
 # Connection Stability
 
-Various retry functions were added to the backend to ensure that a faulty connection does not prevent songs from being transfered.
+Various retry functions were added to the backend to ensure that a faulty connection does not prevent songs from being transferred. A song that cannot be found at all is skipped after 3 retries.
 
 # Ideas
 Look into creating a youtube to youtube version of this, which works off google takeout data (possibly create a script to backup youtube through github actions daily), and can restore data to a new youtube account.
 
-# spotify_to_ytmusic offical README.md
+# spotify_to_ytmusic official README.md
 Tools for moving from Spotify to YTMusic
 
 # Overview

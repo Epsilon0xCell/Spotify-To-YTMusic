@@ -218,4 +218,28 @@ def main(dump="playlists,liked", format="json", file="playlists.json", token="")
 
 
 if __name__ == "__main__":
-    main()
+    # The README documents invocations such as:
+    #   python3 spotify_backup.py playlists.json --dump=liked,playlists --format=json
+    # Previously main() was called with no argument parsing at all, so every
+    # command line argument was silently ignored and the defaults were used.
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Back up Spotify playlists")
+    parser.add_argument(
+        "file",
+        nargs="?",
+        default="playlists.json",
+        help="Output file to write (default: playlists.json)",
+    )
+    parser.add_argument(
+        "--dump",
+        default="playlists,liked",
+        help="What to dump, comma separated (default: playlists,liked)",
+    )
+    parser.add_argument(
+        "--format",
+        default="json",
+        help="Output format: json or a tab separated format (default: json)",
+    )
+    cli_args = parser.parse_args()
+    main(dump=cli_args.dump, format=cli_args.format, file=cli_args.file)

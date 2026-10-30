@@ -390,9 +390,18 @@ def copier(
                     yt, src_track.title, src_track.artist, src_track.album, yt_search_algo
                 )
             except Exception as e:
-                # Check if it's a specific error indicating the track was not found
-                if "list index out of range" in str(e):
+                # lookup_song reports a track that cannot be found in two ways:
+                # algo 0 indexes into an empty result list (IndexError: list
+                # index out of range), while algos 1 and 2 raise ValueError
+                # ("Did not find ..."). Both are "track not found" and must
+                # use the limited retry path; treating only the IndexError
+                # message as not found made the ValueError case retry forever.
+                is_not_found = isinstance(e, ValueError) or (
+                    "list index out of range" in str(e)
+                )
+                if is_not_found:
                     retries += 1
+                    error_count += 1
                     if retries >= max_retries:
                         print(f"ERROR: Track not found after {max_retries} retries: {src_track.title}")
                         break  # Stop retrying this track

@@ -3,11 +3,16 @@
 import json
 import os
 import shutil
+import sys
 from argparse import ArgumentParser
 
 
 def reverse_playlist(input_file="playlists.json", verbose=True, replace=False) -> int:
-    if os.path.exists(input_file) and not replace:
+    if not os.path.exists(input_file):
+        print(f"ERROR: Input file not found: {input_file}")
+        return 1
+
+    if not replace:
         if verbose:
             print(
                 "Output file already exists and no replace argument detected, exiting..."
@@ -15,7 +20,8 @@ def reverse_playlist(input_file="playlists.json", verbose=True, replace=False) -
         return 1
 
     print("Backing up file...")
-    shutil.copyfile(input_file, input_file.split(".")[0] + "_backup.json")
+    backup_file = os.path.splitext(input_file)[0] + "_backup.json"
+    shutil.copyfile(input_file, backup_file)
     # Load the JSON file
     with open(input_file, "r") as file:
         if verbose:
@@ -49,7 +55,17 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("input_file", type=str, help="Path to the input file")
     parser.add_argument(
-        "-v", "--verbose", action="store_false", help="Enable verbose mode"
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=True,
+        help="Print progress messages (on by default; use --no-verbose to silence)",
+    )
+    parser.add_argument(
+        "--no-verbose",
+        dest="verbose",
+        action="store_false",
+        help="Silence progress messages",
     )
     parser.add_argument(
         "-r",
@@ -60,4 +76,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    reverse_playlist(args.input_file, args.verbose, args.replace)
+    sys.exit(reverse_playlist(args.input_file, args.verbose, args.replace))
