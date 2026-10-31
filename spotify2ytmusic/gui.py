@@ -327,17 +327,20 @@ class Window:
                     # x-terminal-emulator and then xterm, and a machine
                     # with neither installed had no way to open the oauth
                     # flow at all. python3 has to exist for this app to be
-                    # running, so the module call rests on less. One weak
-                    # spot I know about: subprocess.call does not raise
-                    # when the command fails, it returns the exit code,
-                    # and nobody here checks that code, so a failed oauth
-                    # run can pass quietly.
+                    # running, so the module call rests on less.
+                    # subprocess.call does not raise when the command
+                    # fails, it returns the exit code, so I check the
+                    # code and say so when the oauth run failed.
                     try:
-                        subprocess.call(
+                        oauth_exit_code = subprocess.call(
                             "python3 -m ytmusicapi oauth",
                             shell=True,
                             stdout=subprocess.PIPE,
                         )
+                        if oauth_exit_code != 0:
+                            print(
+                                f"ERROR: 'python3 -m ytmusicapi oauth' exited with code {oauth_exit_code}. Login did not complete."
+                            )
                     except Exception as e:
                         print(f"An error occurred: {e}")
 

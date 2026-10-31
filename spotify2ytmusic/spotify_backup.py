@@ -110,7 +110,10 @@ class SpotifyAPI:
                 )
 
                 access_token = re.search("access_token=([^&]*)", self.path).group(1)
-                print(f"Received access token from Spotify: {access_token}")
+                # The token value itself is never printed. It is a live
+                # credential for the account, and a terminal log is
+                # exactly the kind of place credentials leak from.
+                print("Received access token from Spotify")
                 raise SpotifyAPI._Authorization(access_token)
 
             else:
@@ -199,7 +202,7 @@ def main(dump="playlists,liked", format="json", file="playlists.json", token="")
                     # anywhere, so I leave episodes out of the text dump.
                     # The JSON dump above keeps them; this skip is only
                     # for this writer.
-                    if track["track"] is None or track["track"]["type"] == "episode":
+                    if track["track"] is None or track["track"].get("type") == "episode":
                         continue
                     f.write(
                         "{name}\t{artists}\t{album}\t{uri}\t{release_date}\r\n".format(
@@ -246,14 +249,25 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dump",
         default="playlists,liked",
-        help="What to dump, comma separated (default: playlists,liked)",
+        help="What to dump, comma separated: playlists and/or liked (default: playlists,liked)",
     )
     parser.add_argument(
         "--format",
         default="json",
-        help="Output format: json or a tab separated format (default: json)",
+        choices=["json", "txt"],
+        help="Output format: json or a tab separated format written for txt (default: json)",
     )
     cli_args = parser.parse_args()
+    # main() tests the dump string with "in", so a value like
+    # "playlistsfoo" would silently count as asking for playlists. I
+    # check the comma separated parts against the two real choices here
+    # instead, and name the bad part.
+    dump_parts = [part.strip() for part in cli_args.dump.split(",") if part.strip()]
+    bad_parts = [part for part in dump_parts if part not in ("playlists", "liked")]
+    if bad_parts or not dump_parts:
+        parser.error(
+            f"invalid --dump value(s): {', '.join(bad_parts) or '(empty)'}; choose from playlists, liked"
+        )
     # The defaults above match the values main() used to be called with,
     # so the plain documented invocation behaves the same as before. The
     # difference is only that a different file, dump, or format typed on

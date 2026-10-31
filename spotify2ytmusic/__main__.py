@@ -10,8 +10,14 @@ def list_commands(module):
     # function to cli, forget this file, and the help text lies. This way
     # the usage message and the check below can only name commands that
     # exist right now.
-    # include only functions defined in e.g. 'cli' module
-    commands = [name for name, obj in inspect.getmembers(module) if inspect.isfunction(obj)]
+    # Only functions defined in the module itself count. A function the
+    # module merely imported would otherwise show up here as a command
+    # it never meant to offer.
+    commands = [
+        name
+        for name, obj in inspect.getmembers(module)
+        if inspect.isfunction(obj) and obj.__module__ == module.__name__
+    ]
     return commands
 
 available_commands = list_commands(cli)

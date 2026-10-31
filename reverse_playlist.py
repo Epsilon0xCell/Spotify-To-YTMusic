@@ -27,6 +27,29 @@ def reverse_playlist(input_file="playlists.json", verbose=True, replace=False) -
             )
         return 1
 
+    # Load and check the JSON file before any backup or write. A file
+    # that is not valid JSON, or not a Spotify backup with a playlists
+    # list, used to die with a traceback from json.load or a KeyError
+    # further down. The input file itself is the thing being rewritten,
+    # so every check that can fail has to happen before the write, and
+    # the cleanest order is: load, check, back up, reverse, write.
+    with open(input_file, "r") as file:
+        if verbose:
+            print("Loading initial JSON file...")
+        try:
+            data = json.load(file)
+        except json.JSONDecodeError as e:
+            print(f"ERROR: Input file is not valid JSON: {input_file} ({e})")
+            return 1
+
+    if not isinstance(data, dict) or not isinstance(data.get("playlists"), list):
+        print(f"ERROR: Input file has no 'playlists' list: {input_file}")
+        return 1
+    for playlist in data["playlists"]:
+        if not isinstance(playlist, dict) or not isinstance(playlist.get("tracks"), list):
+            print(f"ERROR: A playlist in {input_file} has no 'tracks' list; nothing was changed")
+            return 1
+
     print("Backing up file...")
     # splitext, not split("."). Splitting on every dot turned
     # ./playlists.json into a backup named _backup.json in the current
@@ -36,11 +59,6 @@ def reverse_playlist(input_file="playlists.json", verbose=True, replace=False) -
     # reversal below writes a bad file.
     backup_file = os.path.splitext(input_file)[0] + "_backup.json"
     shutil.copyfile(input_file, backup_file)
-    # Load the JSON file
-    with open(input_file, "r") as file:
-        if verbose:
-            print("Loading initial JSON file...")
-        data = json.load(file)
 
     # Copy the data to a new dictionary
     # This copy is shallow and I know it: the playlist dicts inside are

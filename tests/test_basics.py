@@ -2,9 +2,23 @@
 
 import json
 import os
+import sys
 import tempfile
+import types
 import unittest
 from unittest.mock import patch, MagicMock
+
+try:
+    import ytmusicapi  # noqa: F401
+except ImportError:
+    # backend.py imports YTMusic from ytmusicapi at module level. These
+    # tests mock every YTMusic object they use, so when the package is
+    # not installed I register a stand-in module with just the name
+    # backend needs, and the suite still runs. Nothing here touches a
+    # real account either way.
+    stub = types.ModuleType("ytmusicapi")
+    stub.YTMusic = object
+    sys.modules["ytmusicapi"] = stub
 
 from spotify2ytmusic import backend
 
@@ -142,10 +156,44 @@ class TestCopier(unittest.TestCase):
             backend,
             "lookup_song",
             side_effect=ValueError("Did not find Missing by Nobody from Nowhere"),
-        ), patch.object(backend.time, "sleep", return_value=None):
+        ) as lookup, patch.object(backend.time, "sleep", return_value=None):
             backend.copier(tracks, dst_pl_id="dst_test", track_sleep=0)
 
         self.assertFalse(self.mock_yt.add_playlist_items.called)
+        self.assertEqual(lookup.call_count, 3)
+
+    def test_copier_lookup_network_error_is_bounded(self):
+        # A lookup that keeps failing with a network style error gets a
+        # budget of 10 attempts, then the track is skipped. Before this
+        # budget existed the loop retried the same track forever.
+        tracks = iter([backend.SongInfo("Unlucky", "Someone", "Somewhere")])
+        with patch.object(
+            backend,
+            "lookup_song",
+            side_effect=RuntimeError("connection reset"),
+        ) as lookup, patch.object(backend.time, "sleep", return_value=None):
+            backend.copier(tracks, dst_pl_id="dst_test", track_sleep=0)
+
+        self.assertEqual(lookup.call_count, 10)
+        self.assertFalse(self.mock_yt.add_playlist_items.called)
+
+    def test_copier_add_failure_is_bounded(self):
+        # The mock search finds one song, but every attempt to add it
+        # fails. The copier tries 10 times and then moves on instead of
+        # looping on the add forever.
+        self.mock_yt.add_playlist_items.side_effect = RuntimeError("api down")
+        tracks = iter([backend.SongInfo("Found Song", "Found Artist", "Found Album")])
+        with patch.object(backend.time, "sleep", return_value=None):
+            backend.copier(tracks, dst_pl_id="dst_test", track_sleep=0)
+
+        self.assertEqual(self.mock_yt.add_playlist_items.call_count, 10)
+
+    def test_copier_duplicate_track_is_added_once(self):
+        track = backend.SongInfo("Found Song", "Found Artist", "Found Album")
+        with patch.object(backend.time, "sleep", return_value=None):
+            backend.copier(iter([track, track]), dst_pl_id="dst_test", track_sleep=0)
+
+        self.assertEqual(self.mock_yt.add_playlist_items.call_count, 1)
 
 
 if __name__ == "__main__":

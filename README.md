@@ -4,14 +4,22 @@
 
 This is a fork of linsomniac/spotify_to_ytmusic with local changes by the owner:
 retry handling in the backend copier (a track that cannot be found is skipped
-after 3 retries instead of being retried forever, for every search algorithm),
-copy_playlist reusing an existing YTMusic playlist of the same name instead of
-always creating a new one, a command list in the `python -m spotify2ytmusic`
-usage output, argument parsing in spotify_backup.py (its documented file,
---dump and --format arguments were previously ignored), and the workflow
-notes below. The upstream README follows the fork notes.
+after 3 retries instead of being retried forever, for every search algorithm;
+other lookup errors get 10 attempts and playlist additions get 10 attempts,
+so no track can hold a copy run forever), copy_playlist reusing an existing
+YTMusic playlist of the same name instead of always creating a new one, a
+command list in the `python -m spotify2ytmusic` usage output, argument
+parsing in spotify_backup.py (its documented file, --dump and --format
+arguments were previously ignored, and bad values are now refused), input
+checks in reverse_playlist.py (a file that is not valid JSON or has no
+playlists list gets one error line and is left alone, instead of a
+traceback), and the workflow notes below. The upstream README follows the
+fork notes.
 
-Tests: `python -m pytest tests/` (4 tests, mocked YTMusic, no account needed).
+Tests: `python3 -m unittest discover -s tests` (17 tests, mocked YTMusic,
+no account needed). The suite runs even where ytmusicapi itself is not
+installed: the tests mock every YTMusic object, so they register a
+stand-in module for the import when the package is missing.
 
 # Running:
 ```
@@ -44,7 +52,7 @@ Run the terminal application to transfer all playlists with a time to sleep of 3
 
 # Connection Stability
 
-Various retry functions were added to the backend to ensure that a faulty connection does not prevent songs from being transferred. A song that cannot be found at all is skipped after 3 retries.
+Various retry functions were added to the backend to ensure that a faulty connection does not prevent songs from being transferred. A song that cannot be found at all is skipped after 3 retries. Other lookup failures are retried up to 10 times, and a failed playlist addition is retried up to 10 times with a doubling wait capped at 320 seconds, then that track is counted as an error and the copy moves on to the next one.
 
 # Ideas
 Look into creating a youtube to youtube version of this, which works off google takeout data (possibly create a script to backup youtube through github actions daily), and can restore data to a new youtube account.

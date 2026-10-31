@@ -355,9 +355,12 @@ def copier(
     yt: Optional[YTMusic] = None,
 ):
     """
-    Copies tracks from a source to a YouTube playlist, retrying indefinitely
-    if network issues occur during song lookup or playlist addition,
-    but limiting retries for specific errors like "track not found".
+    Copies tracks from a source to a YouTube playlist. A track that
+    cannot be found is skipped after 3 retries. Other lookup errors and
+    playlist addition errors are retried up to 10 attempts each, with a
+    delay between attempts, and the track is then skipped and counted
+    as an error: no loop in here retries forever, so a permanently
+    failing track cannot hold a copy run hostage.
     """
     if yt is None:
         yt = get_ytmusic()
@@ -380,16 +383,18 @@ def copier(
     for src_track in src_tracks:
         print(f"Spotify:   {src_track.title} - {src_track.artist} - {src_track.album}")
 
-        # Retry song lookup indefinitely until successful
         # I split lookup failures into two kinds on purpose. Not found is
         # an answer about the track, so it gets 3 tries and then I move
         # on. Anything else looks like a network or API problem that may
-        # clear, so it sleeps and loops without spending those 3 tries.
-        # The price of that split: error_count grows on both paths, but
-        # only the not found path can ever skip the track.
+        # clear, so it gets its own, larger budget of 10 tries. Both
+        # budgets end. The earlier version of this loop gave the second
+        # kind no limit at all, and a permanent API failure on one track
+        # hung the whole copy run on that track forever.
         dst_track = None
         retries = 0
-        max_retries = 3  # Limit for specific error retries
+        max_retries = 3  # Limit for "track not found" retries
+        error_retries = 0
+        max_error_retries = 10  # Limit for other lookup errors
         while dst_track is None:
             try:
                 dst_track = lookup_song(
@@ -405,17 +410,19 @@ def copier(
                 is_not_found = isinstance(e, ValueError) or (
                     "list index out of range" in str(e)
                 )
+                error_count += 1
                 if is_not_found:
                     retries += 1
-                    error_count += 1
                     if retries >= max_retries:
                         print(f"ERROR: Track not found after {max_retries} retries: {src_track.title}")
                         break  # Stop retrying this track
                 else:
-                    # If it's a different error, keep retrying indefinitely
+                    error_retries += 1
+                    if error_retries >= max_error_retries:
+                        print(f"ERROR: Lookup failed {max_error_retries} times, skipping track: {src_track.title} ({e})")
+                        break  # Stop retrying this track
                     print(f"ERROR: Unable to look up song on YTMusic: {e}, retrying in 5 seconds...")
                     time.sleep(5)  # Delay before retrying
-                    error_count += 1
 
         # If dst_track is still None, it means we have exceeded max retries
         if dst_track is None:
@@ -441,15 +448,19 @@ def copier(
         if not dry_run:
             exception_sleep = 5
 
-            # Retry playlist addition indefinitely until successful
-            # No attempt limit here, on purpose: the lookup above already
-            # found the track, and I would rather wait out a bad network
-            # stretch than lose a copy that has been running for an hour.
-            # The wait is capped at 320 seconds below so a long outage
-            # does not double the delay into hours. I know the trade: if
-            # the API rejects this videoId for a permanent reason, this
-            # loop never gives up on its own.
-            while True:
+            # Retry playlist addition up to 10 attempts, the same budget
+            # _ytmusic_create_playlist uses in this file. The wait doubles
+            # each time and is capped at 320 seconds so a long outage does
+            # not double the delay into hours. This loop used to have no
+            # attempt limit: if the API rejected a videoId for a permanent
+            # reason, the run never gave up on its own and never reached
+            # the tracks after it. After the 10th failure the track is
+            # counted as an error and the copy moves on.
+            add_attempts = 0
+            max_add_attempts = 10
+            added = False
+            while not added and add_attempts < max_add_attempts:
+                add_attempts += 1
                 try:
                     if dst_pl_id is not None:
                         yt.add_playlist_items(
@@ -459,13 +470,23 @@ def copier(
                         )
                     else:
                         yt.rate_song(dst_track["videoId"], "LIKE")
-                    break  # Break out of the loop on success
+                    added = True  # Break out of the loop on success
                 except Exception as e:
-                    print(
-                        f"ERROR: (Retrying add_playlist_items: {dst_pl_id} {dst_track['videoId']}) {e}, retrying in {exception_sleep} seconds"
-                    )
-                    time.sleep(exception_sleep)
-                    exception_sleep = min(exception_sleep * 2, 320)  # Exponential backoff with max delay
+                    if add_attempts >= max_add_attempts:
+                        print(
+                            f"ERROR: (Giving up on add_playlist_items after {max_add_attempts} attempts: {dst_pl_id} {dst_track['videoId']}) {e}"
+                        )
+                        error_count += 1
+                        # The videoId went into the added set before the
+                        # attempts; take it back out so the summary count
+                        # of added tracks does not claim this one.
+                        tracks_added_set.discard(dst_track["videoId"])
+                    else:
+                        print(
+                            f"ERROR: (Retrying add_playlist_items: {dst_pl_id} {dst_track['videoId']}) {e}, retrying in {exception_sleep} seconds"
+                        )
+                        time.sleep(exception_sleep)
+                        exception_sleep = min(exception_sleep * 2, 320)  # Exponential backoff with max delay
 
         if track_sleep:
             time.sleep(track_sleep)
@@ -497,7 +518,7 @@ def copy_playlist(
         ytmusic_playlist_id = get_playlist_id_by_name(yt, pl_name)
         print(f"Looking up playlist '{pl_name}': id={ytmusic_playlist_id}")
 
-    if not ytmusic_playlist_id or ytmusic_playlist_id is None:
+    if not ytmusic_playlist_id:
         if pl_name == "":
             print("No playlist name or ID provided, creating playlist...")
             spotify_pls: dict = load_playlists_json()
