@@ -1,4 +1,13 @@
-![spotify_to_ytmusic banner](banner.png)
+![Intro scenery](intro-banner.png)
+
+
+# Spotify-To-YTMusic
+
+![Wordmark banner](banner.png)
+
+![Animated scene](scene.svg)
+
+
 
 # This fork
 
@@ -21,6 +30,9 @@ no account needed). The suite runs even where ytmusicapi itself is not
 installed: the tests mock every YTMusic object, so they register a
 stand-in module for the import when the package is missing.
 
+
+![Separator](sep-heavy.svg)
+
 # Running:
 ```
 brew install python
@@ -37,6 +49,9 @@ rm -rf log.txt
 python -u -m spotify2ytmusic load_liked --track-sleep=3 --algo 0 2>&1 | tee -a log.txt && python -u -m spotify2ytmusic load_liked_albums --track-sleep=3 --algo 0 2>&1 | tee -a log.txt && python -u -m spotify2ytmusic copy_all_playlists --track-sleep=3 --algo 0 --privacy PRIVATE 2>&1 | tee -a log.txt
 ```
 
+
+![Separator](sep-heavy.svg)
+
 # For Highest Accuracy of songs:
 Run this command
 
@@ -46,19 +61,36 @@ python -u -m spotify2ytmusic load_liked --track-sleep=3 --algo 0 2>&1 | tee -a l
 
 Three different times with every single algorithm 0,1,2
 
+
+![Separator](sep-heavy.svg)
+
 # Avoiding Ban:
 
 Run the terminal application to transfer all playlists with a time to sleep of 3 seconds --track-sleep=3
+
+
+![Separator](sep-heavy.svg)
 
 # Connection Stability
 
 Various retry functions were added to the backend to ensure that a faulty connection does not prevent songs from being transferred. A song that cannot be found at all is skipped after 3 retries. Other lookup failures are retried up to 10 times, and a failed playlist addition is retried up to 10 times with a doubling wait capped at 320 seconds, then that track is counted as an error and the copy moves on to the next one.
 
+> **Guard note:** a track that cannot be found is skipped after 3 retries; other lookup failures allow 10 attempts, and a failed playlist addition allows 10 attempts with a doubling wait capped at 320 seconds.
+
+
+![Separator](sep-heavy.svg)
+
 # Ideas
 Look into creating a youtube to youtube version of this, which works off google takeout data (possibly create a script to backup youtube through github actions daily), and can restore data to a new youtube account.
 
+
+![Separator](sep-heavy.svg)
+
 # spotify_to_ytmusic official README.md
 Tools for moving from Spotify to YTMusic
+
+
+![Separator](sep-heavy.svg)
 
 # Overview
 
@@ -66,12 +98,21 @@ This is a set of scripts for copying "liked" songs and playlists from Spotify to
 It provides both CLI tools and a GUI (implemented by Yoween, formerly called
 [spotify_to_ytmusic_gui](https://github.com/Yoween/spotify_to_ytmusic_gui)).
 
+
+![Separator](sep-heavy.svg)
+
 # Thanks
 
 Thanks to @RadicalArti and Meet Vora for their generous financial contributions to this
 project.
 
+
+![Separator](sep-heavy.svg)
+
 # Getting Started
+
+
+![Separator](sep-light.svg)
 
 ## Install Python (you may already have it)
 
@@ -102,6 +143,9 @@ Macintosh HD > Applications > Python Folder > double click on "Install Certifica
 You probably already have it installed.  See your package manager of choice to
 install it.
 
+
+![Separator](sep-light.svg)
+
 ## Install spotify2ytmusic (via pip)
 
 This package is available on pip, so you can install it using:
@@ -111,6 +155,9 @@ This package is available on pip, so you can install it using:
 or:
 
 `python3 -m pip install spotify2ytmusic`
+
+
+![Separator](sep-light.svg)
 
 ## (Or) Running From Source
 
@@ -138,6 +185,9 @@ python3 -m spotify2ytmusic list_playlists
 python3 -m spotify2ytmusic load_liked
 [etc...]
 ```
+
+
+![Separator](sep-light.svg)
 
 ## Graphical UI
 
@@ -169,6 +219,8 @@ This will give you a URL, visit that URL and authorize the application.  When yo
 done with the import you can remove the authorization for this app.
 
 This will write a file "oauth.json".  Keep this file secret while the app is authorized.
+
+> **Guard note:** oauth.json holds a live session token. Keep it secret while the app is authorised.
 This file includes a logged in session token.
 
 ytmusicapi is a dependency of this software and should be installed as part of the "pip
@@ -222,6 +274,8 @@ Copying all playlists will use the name of the Spotify playlist as the destinati
 
 **NOTE**: This does not copy the Liked playlist (see above to do that).
 
+> **Guard note:** copy_all_playlists leaves the Liked playlist behind; liked songs travel by their own command, load_liked.
+
 ### Copy specific Playlist - Tab 6
 
 In the list output, find the "playlist id" (the first column) of the Spotify playlist and of the YTMusic playlist.
@@ -232,6 +286,9 @@ playlist if it does not exist, if you start the YTMusic playlist with a "+":
 
 Re-running "copy_playlist" or "load_liked" in the event that it fails should be safe, it
 will not duplicate entries on the playlist.
+
+
+![Separator](sep-light.svg)
 
 ## Command Line Usage
 
@@ -320,6 +377,9 @@ This is mostly for debugging, but there is a command to search for tracks in YTM
 
 `s2yt_search --artist <ARTIST> --album <ALBUM> <TRACK_NAME>`
 
+
+![Separator](sep-light.svg)
+
 ## Details About Search Algorithms
 
 The function first searches for albums by the given artist name on YTMusic.
@@ -346,6 +406,9 @@ artist name. If it still can't find a match, it raises a ValueError.
 
 If the function can't find the track using any of the above methods, it raises a
 ValueError.
+
+
+![Separator](sep-light.svg)
 
 ## FAQ
 
@@ -382,6 +445,9 @@ No, this runs on Linux/Windows/MacOS.
 
   Try running with "--track-sleep=3" argument to do a 3 second sleep between tracks.  This
   will take much longer, but may succeed where faster rates have failed.
+
+
+![Separator](sep-light.svg)
 
 ## License
 

@@ -3,165 +3,57 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spotify To YTMusic: what it is, how it runs, where it stops</title>
-<meta name="description" content="This is a fork of linsomniac/spotifytoytmusic with local changes by the owner: retry handling in the backend copier (a track that cannot be found is s">
+<title>Spotify-To-YTMusic: The Abbey Road Crossing Guard of Sound</title>
+<meta name="description" content="A fork that walks liked songs, liked albums, and playlists from Spotify to YouTube Music, one search at a time: backup file in, order reversed, oauth sign in, then the crossing itself, with bounded retries.">
 <style>
-:root {
-  --bg: #080c0a; --panel: #0d1410; --ink: #d9e8dd;
-  --mut: #111b15;
-  --acc: #57e389; --acc2: #e8b339;
-  --line: #0d1410;
-}
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink);
-  font-family: 'Book Antiqua', Georgia, serif; line-height: 1.55; }
-code, pre, .mono { font-family: 'Andale Mono', monospace; }
-a { color: var(--acc2); }
-.hero { padding: 3rem 6vw 1rem; }
-.hero img.banner { width: 100%; height: auto; border: 1px solid var(--line);
-  border-radius: 10px; }
-.logo { width: 92px; height: 92px; border-radius: 18px;
-  border: 1px solid var(--line); }
-h1 { font-size: 2.4rem; margin: 0.4em 0 0.1em; }
-h2 { border-bottom: 2px solid var(--acc); padding-bottom: 0.2em;
-  margin-top: 2em; }
-.lede { font-size: 1.15rem; max-width: 62ch; }
-main { padding: 0 6vw 3rem; max-width: 1180px; margin: 0 auto; }
-.grid { display: grid; gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
-.card { background: var(--panel); border: 1px solid var(--line);
-  border-radius: 12px; padding: 1rem 1.2rem; }
-.card.pop { animation: rise 0.7s ease both; }
-@keyframes rise { from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: none; } }
-pre.code { background: #101014; color: #e8e6df; padding: 1rem 1.2rem;
-  border-radius: 12px; overflow-x: auto; font-size: 0.86rem;
-  border-left: 5px solid var(--acc); }
-table { border-collapse: collapse; width: 100%; }
-td, th { border-bottom: 1px solid var(--line); padding: 0.45rem 0.6rem;
-  text-align: left; }
-.shots { display: grid; gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.shots img { width: 100%; height: auto; border: 1px solid var(--line);
-  border-radius: 10px; background: #f4f1e8; }
-footer { padding: 2rem 6vw; border-top: 1px solid var(--line);
-  color: var(--mut); }
-.rail { display: flex; gap: 1.2rem; align-items: flex-start; }
-.rail nav { position: sticky; top: 1rem; min-width: 180px; }
-@media (max-width: 760px) { .rail { flex-direction: column; }
-  .rail nav { position: static; } }
-@media (prefers-reduced-motion: reduce) {
-  .card.pop { animation: none; } * { scroll-behavior: auto; } }
+@font-face{font-family:'Annapurna SIL';src:url('fonts/AnnapurnaSIL.ttf') format('truetype');}
+@font-face{font-family:'Cabin';src:url('fonts/Cabin.ttf') format('truetype');}
+:root{--tarmac:#17171a;--cream:#f0ead4;--char:#2b2b2e;--teal:#17585c;--amber:#e8a43e;--ember:#b23422}
+*{box-sizing:border-box} body{margin:0;background:var(--tarmac);color:var(--char);font-family:'Cabin',sans-serif;line-height:1.65}
+h1,h2{font-family:'Annapurna SIL',serif}
+.hero{max-width:1080px;margin:0 auto;padding:2rem 5vw 0}.hero img.road{width:100%;height:auto;display:block}
+.hero .row{display:flex;gap:1.1rem;align-items:flex-start;margin-top:1.1rem}.hero .row img{width:92px;height:92px}
+.hero h1{color:var(--cream);margin:.1rem 0 .3rem;font-size:2rem}.hero p{color:#cfc9b4;max-width:46rem}
+main{max-width:1080px;margin:0 auto;padding:0 5vw 3rem}
+.stripe{background:var(--cream);padding:1.2rem 1.5rem 1.2rem 4.6rem;margin:1.8rem 0;position:relative}
+.stripe:after{content:'';position:absolute;right:0;bottom:0;border-style:solid;border-width:0 0 22px 22px;border-color:transparent transparent var(--tarmac) transparent}
+.stripe.caution:after{border-color:transparent transparent var(--ember) transparent}
+.stage{position:absolute;left:1rem;top:1rem;width:44px;height:44px;border-radius:50%;background:var(--cream);border:3px solid var(--char);text-align:center;line-height:40px;font-family:'Annapurna SIL',serif;font-size:1.25rem}
+.stripe h2{margin:.1rem 0 .5rem;text-transform:uppercase;letter-spacing:.06em;font-size:1.3rem}
+.stripe h2 small{display:block;font-family:'Cabin',sans-serif;text-transform:none;letter-spacing:0;font-size:.85rem;color:#5a574c}
+.stripe p{margin:.4rem 0}.stripe ul{margin:.3rem 0;padding-left:1.2rem}
+.tarmac-panel{background:#232326;color:#e8e4d2;padding:.9rem 1.1rem;overflow-x:auto;font-family:monospace;margin:.6rem 0}
+.btn{display:inline-block;background:var(--cream);color:var(--char);font-family:'Cabin',sans-serif;text-decoration:none;padding:.55rem 1.1rem;border-radius:16px 16px 0 0;border-bottom:5px solid var(--teal);margin:.3rem .4rem .3rem 0}
+.btn:hover{border-bottom-color:#2a7d82}.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:2px dashed var(--cream);outline-offset:4px}
+a{color:#17585c;text-decoration:none}
+a .beacon{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:#a87f2e;box-shadow:0 .35em 0 -.12em #17171a;margin-right:.45em}
+a:hover{text-decoration:underline}a:hover .beacon{background:var(--amber)}
+.divider{height:20px;background:var(--cream);margin:2rem 0;position:relative}
+.divider:before{content:'';position:absolute;left:44%;right:44%;top:0;bottom:0;background:var(--tarmac);opacity:.18}
+.divider .dot{position:absolute;left:50%;top:3px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--amber);border:2px solid var(--char)}
+.divider.half{width:50%;margin-left:auto;margin-right:auto}.divider.half .dot{display:none}
+.note{background:#232326;color:var(--cream);padding:.8rem 1rem;max-width:40rem}
+.note .dot{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:var(--amber);margin-right:.45em}
+footer{max-width:1080px;margin:0 auto;padding:0 5vw 2.5rem;color:#a49e88}
+code{background:#ddd5ba;padding:.05rem .3rem}.tarmac-panel code{background:none;padding:0}
 </style>
 </head>
-<body class="layout-split">
-<!-- This page exists for Spotify-To-YTMusic alone: the layout (split-hero),
-     the colors, and the type were picked for this project, not
-     shared with the other project pages. The code block below is
-     copied from the file it names, line for line. If it looks
-     plain, that is because the project is plain, and I would
-     rather the page match the project than dress it up. The one
-     thing I will not do here is oversell: what this project does
-     not do is stated on the page, not hidden from it. -->
+<body>
 <header class="hero">
-  <img class="logo" src="assets/logo.png" alt="Spotify To YTMusic logo">
-  <img class="banner" src="assets/banner.png" alt="">
-  <h1>Spotify To YTMusic</h1>
-  <p class="mono"><a href="https://github.com/Epsilon0xCell/Spotify-To-YTMusic">github.com/Epsilon0xCell/Spotify-To-YTMusic</a></p>
+<img class="road" src="assets/intro-banner.png" alt="The crossing at dawn, empty, a lollipop leaning against the traffic island post">
+<div class="row"><img src="assets/logo.png" alt="One white crossing stripe with shoe prints"><div><h1>Spotify-To-YTMusic</h1><p>This fork walks a music library across the road: out of Spotify as a backup file, order fixed, signed in at the far kerb, then liked songs, liked albums, and playlists carried over one search at a time. The guard decides, track by track, what may go over and what stays behind after its retries run out.</p><p><a class="btn" href="https://github.com/Epsilon0xCell/Spotify-To-YTMusic">Open the repo</a> <a class="btn" href="#crossing">The crossing itself</a></p></div></div>
 </header>
-
 <main>
-  <section class="rail">
-    <nav aria-label="on this page">
-      <p class="mono"><a href="#run">Run it</a><br>
-      <a href="#files">The files</a><br>
-      <a href="#sheets">The sheets</a><br>
-      <a href="https://github.com/Epsilon0xCell/Spotify-To-YTMusic">The repo</a></p>
-    </nav>
-    <div>
-      <p class="lede">This is a fork of linsomniac/spotifytoytmusic with local changes by the owner: retry handling in the backend copier (a track that cannot be found is skipped after 3 retries instead of being retried forever, for every search algorithm), copyplaylist reusing an existing YTMusic playlist of the same na</p>
-      <div class="grid">
-        <div class="card pop"><h3>What it is</h3>
-          <p>Spotify To YTMusic: 21 files, 17653 counted
-          lines across JSON 15155, Python 1893, Markdown 385. One job, done in the
-          open, in files you can read.</p></div>
-        <div class="card pop"><h3>The biggest piece</h3>
-          <p><code>tests/playliststest.json</code> carries the most
-          lines. If the project grows, that file is where the growth
-          lands first, for better or worse.</p></div>
-        <div class="card pop"><h3>The honest gap</h3>
-          <p>1 test files sit in the tree.</p></div>
-      </div>
-      <section id="run">
-        <h2>Run it</h2>
-        <p>The repo README has the exact commands for this one. The
-        shape is the shape for most of my projects: clone it, read the
-        top file first so you know what will happen, then run it on
-        something you do not mind breaking.</p>
-        <p class="mono">$ git clone https://github.com/Epsilon0xCell/Spotify-To-YTMusic.git<br>$ cd Spotify-To-YTMusic</p>
-      </section>
-      
-  <section aria-label="real code">
-    <h2>The code, as it sits in the repo</h2>
-    <p>From <code>tests/playliststest.json</code>, line 1 on. I did
-    not tidy it for the page. What you see is what the file has.</p>
-    <pre class="code"><code>{
-    &quot;playlists&quot;: [
-        {
-            &quot;collaborative&quot;: false,
-            &quot;description&quot;: &quot;&quot;,
-            &quot;external_urls&quot;: {
-                &quot;spotify&quot;: &quot;https://open.spotify.com/playlist/68QlHDwCiXfhodLpS72iOx&quot;
-            },
-            &quot;href&quot;: &quot;https://api.spotify.com/v1/playlists/68QlHDwCiXfhodLpS72iOx&quot;,
-            &quot;id&quot;: &quot;68QlHDwCiXfhodLpS72iOx&quot;,
-            &quot;images&quot;: [
-                {
-                    &quot;height&quot;: 640,
-                    &quot;url&quot;: &quot;https://mosaic.scdn.co/640/ab67616d0000b2731e1cd3079539cc7f8bef096dab67616d0000b27331dc2b6da1570a9c8929e0f6ab67616d0000b273332e80447a4ddc2843ea332aab67616d0000b273b241a0ad9ffc805fe22564f3&quot;,
-                    &quot;width&quot;: 640
-                },
-                {
-                    &quot;height&quot;: 300,
-                    &quot;url&quot;: &quot;https://mosaic.scdn.co/300/ab67616d0000b2731e1cd3079539cc7f8bef096dab67616d0000b27331dc2b6da1570a9c8929e0f6ab67616d0000b273332e80447a4ddc2843ea332aab67616d0000b273b241a0ad9ffc805fe22564f3&quot;,
-                    &quot;width&quot;: 300
-                },
-                {</code></pre>
-  </section>
-      <section id="files">
-        <h2>The files that matter</h2>
-        <table><tr><th>File</th><th>Lines</th></tr>
-        <tr><td><code>tests/playliststest.json</code></td><td>15154</td></tr>
-        <tr><td><code>spotify2ytmusic/backend.py</code></td><td>596</td></tr>
-        <tr><td><code>spotify2ytmusic/gui.py</code></td><td>391</td></tr>
-        <tr><td><code>README.md</code></td><td>385</td></tr>
-        <tr><td><code>spotify2ytmusic/cli.py</code></td><td>346</td></tr>
-        <tr><td><code>spotify2ytmusic/spotify_backup.py</code></td><td>261</td></tr>
-        </table>
-        <p>Names doing the work: <span class="mono">reverse_playlist, list_commands, get_ytmusic, _ytmusic_create_playlist, load_playlists_json, create_playlist, iter_spotify_liked_albums, iter_spotify_playlist</span>.</p>
-      </section>
-      <section id="sheets">
-        <h2>Drawn by hand</h2>
-        <p>I sketch my projects on notebook paper so I have to
-        understand them well enough to draw them. The full set,
-        with the counts and how they were counted, is the
-        <a href="https://github.com/Epsilon0xCell/Spotify-To-YTMusic/tree/main/Spotify-To-YTMusic-Visuals">Spotify-To-YTMusic-Visuals</a>
-        folder in the repo. Nothing is drawn over the binder holes.
-        That is a rule, not a style.</p>
-        <div class="shots">
-          <img src="assets/architecture.png" alt="Hand drawn architecture sheet for Spotify To YTMusic">
-          <img src="assets/flowchart.png" alt="Hand drawn flowchart sheet for Spotify To YTMusic">
-          <img src="assets/product-map.png" alt="Hand drawn product map sheet for Spotify To YTMusic">
-        </div>
-      </section>
-    </div>
-  </section>
+<div class="divider"><span class="dot"></span></div>
+<section class="stripe"><span class="stage">1</span><h2>Get the list out of Spotify <small>Stage one, the near kerb</small></h2><p>The tool does not talk to Spotify directly. It works from a file called <code>playlists.json</code> produced by the separate <code>spotify-backup.py</code> script, which the user runs after authorising access to their Spotify account, typically with these arguments:</p><div class="tarmac-panel">python3 spotify-backup.py playlists.json --dump=liked,playlists --format=json</div><p>In this fork the backup script argument parsing was fixed: its documented <code>--dump</code> and <code>--format</code> arguments were previously ignored, and bad values are now refused.</p></section>
+<section class="stripe"><span class="stage">2</span><h2>Fix the order <small>Stage two, turning the file round</small></h2><p><code>reverse_playlist.py</code> reads that JSON file and reverses each playlist, because the backup lists tracks in an order the author did not want carried over. It writes a backup of the original file first.</p><p>In this fork it also checks its input: a file that is not valid JSON, or that has no playlists list, gets one error line and is left alone instead of producing a traceback.</p><div class="tarmac-panel">python3 ./reverse_playlist.py ./playlists.json -r</div></section>
+<div class="divider half"></div>
+<section class="stripe"><span class="stage">3</span><h2>Sign in to the destination <small>Stage three, the far kerb</small></h2><p>YouTube Music access runs through ytmusicapi oauth, which writes <code>oauth.json</code>. Without that file the backend stops with an error message telling the user to log in.</p><div class="tarmac-panel">ytmusicapi oauth</div><div class="note"><p><span class="dot"></span>Guard note: <code>oauth.json</code> holds a live session token. Keep it private while the app is authorised.</p></div></section>
+<section class="stripe" id="crossing"><span class="stage">4</span><h2>The crossing itself <small>Stage four, the real command names, set as a kerbside list</small></h2><ul><li><code>load_liked</code> likes the Spotify liked songs on YouTube Music.</li><li><code>load_liked_albums</code> brings liked albums across as liked songs.</li><li><code>list_playlists</code> shows what exists on both sides.</li><li><code>copy_playlist</code> moves one named playlist.</li><li><code>copy_all_playlists</code> moves every playlist while pointedly leaving the Liked playlist out.</li><li><code>create_playlist</code> makes a destination list.</li><li><code>gui</code> opens the tabbed graphical window.</li></ul><p>Matching works like this: the code searches YouTube Music for the album by the same artist, checks the first three album results for a track with the exact same name, then falls back to a song search. Algorithm 0 takes the first song result. Algorithm 1 demands an exact match on track, artist, and album. Algorithm 2 tries a fuzzy match with bracketed text stripped, then searches videos.</p><p>A track can therefore be matched wrongly, especially under algorithm 0. A track with no acceptable match raises an error and, in this fork, is skipped after three retries rather than retried for ever. Other lookup failures allow ten attempts, and a failed playlist addition allows ten attempts with a doubling wait capped at 320 seconds before that track counts as an error and the copy moves on. Copying a playlist whose name already exists on YouTube Music reuses that playlist in this fork instead of always creating another one. Re-running a copy is described in the upstream notes as safe against duplicates.</p><div class="note"><p><span class="dot"></span>Guard note: an unmatched track is skipped after three retries. The guard keeps a count of who did not cross.</p></div></section>
+<div class="divider"><span class="dot"></span></div>
+<section class="stripe caution"><span class="stage">5</span><h2>Cautions at the far kerb <small>Stage five, read before the traffic moves</small></h2><p>Run with <code>--track-sleep=3</code> to slow the rate and lower the risk of a ban. Expect long runs on big libraries. Use a desktop operating system, because the tool does not run on mobile.</p><p>Know the limits: no <code>playlists.json</code> means no transfer, no <code>oauth.json</code> means no destination, obscure titles may match badly or not at all, and liked songs need their own command because <code>copy_all_playlists</code> skips them.</p><div class="note"><p><span class="dot"></span>Guard note: <code>copy_all_playlists</code> leaves liked songs behind. Run <code>load_liked</code> for them.</p></div><p>The fork is covered by 17 tests with mocked YouTube Music objects, no account needed: <code>python3 -m unittest discover -s tests</code>. Background and upstream detail live in the <a href="https://github.com/Epsilon0xCell/Spotify-To-YTMusic"><span class="beacon"></span>repo README</a>.</p></section>
 </main>
-<footer>
-  <p>Spotify To YTMusic is one of my projects. This page was written
-  from the repo itself on 2026-10-30: the counts are the
-  repo's counts, the code is the repo's code, and the gaps are the
-  repo's gaps.</p>
-</footer>
+<footer><p>Spotify-To-YTMusic: what could be carried is across. The few tracks that never matched remain on the near kerb, visible and unhidden.</p></footer>
 </body>
 </html>

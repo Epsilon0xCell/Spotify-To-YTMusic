@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 260" role="img" aria-label="The crossing from the far kerb: studio windows lighting, a beacon blinking, shoe prints crossing stripe by stripe, a lollipop rising mid road">
+<rect width="1200" height="260" fill="#17171a"/>
+<rect x="0" y="0" width="1200" height="86" fill="#3d4a3a"/>
+<g fill="#101014"><rect x="820" y="18" width="330" height="66"/></g>
+<g fill="#3a3a40"><rect x="842" y="30" width="40" height="42"><animate attributeName="fill" values="#3a3a40;#3a3a40;#e8c87a;#e8c87a" keyTimes="0;0.3;0.45;1" dur="17s" repeatCount="indefinite"/></rect><rect x="906" y="30" width="40" height="42"><animate attributeName="fill" values="#3a3a40;#3a3a40;#3a3a40;#e8c87a" keyTimes="0;0.5;0.65;1" dur="17s" repeatCount="indefinite"/></rect><rect x="970" y="30" width="40" height="42"/></g>
+<g stroke="#0c0c0e" stroke-width="4"><line x1="120" y1="84" x2="120" y2="30"/><line x1="220" y1="84" x2="220" y2="30"/><line x1="320" y1="84" x2="320" y2="30"/></g>
+<rect x="0" y="84" width="1200" height="8" fill="#6d6a62"/>
+<g fill="#f0ead4"><polygon points="150,120 1050,120 1090,146 110,146"/><polygon points="130,164 1070,164 1120,196 80,196"/><polygon points="100,214 1100,214 1160,252 40,252"/></g>
+<g><rect x="586" y="96" width="10" height="34" fill="#0c0c0e"/><circle cx="591" cy="90" r="13" fill="#e8a43e"><animate attributeName="opacity" values="1;0.25;1" dur="2.8s" repeatCount="indefinite"/></circle></g>
+<g fill="#17171a"><g opacity="0"><polygon points="300,128 330,124 342,130 330,136 302,136"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.3;0.45" dur="26s" repeatCount="indefinite"/></g><g opacity="0"><polygon points="520,172 550,168 562,174 550,180 522,180"/><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.3;0.42;0.55;0.7" dur="26s" repeatCount="indefinite"/></g><g opacity="0"><polygon points="740,222 770,218 782,224 770,230 742,230"/><animate attributeName="opacity" values="0;0;0;1;1;0" keyTimes="0;0.45;0.55;0.68;0.85;1" dur="26s" repeatCount="indefinite"/></g></g>
+<g opacity="0"><line x1="612" y1="150" x2="640" y2="112" stroke="#e8e4d2" stroke-width="5"/><circle cx="652" cy="98" r="17" fill="#f4f0e2" stroke="#b23422" stroke-width="4"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.34;0.42;0.6;0.68;1" dur="26s" repeatCount="indefinite"/></g>
+<g><rect x="60" y="238" width="90" height="14" fill="#26262a"/><g stroke="#0c0c0e" stroke-width="3"><line x1="72" y1="240" x2="72" y2="250"/><line x1="92" y1="240" x2="92" y2="250"/><line x1="112" y1="240" x2="112" y2="250"/><line x1="132" y1="240" x2="132" y2="250"/></g>
+<rect x="180" y="222" width="52" height="26" rx="3" fill="#ddd5ba"/><rect x="180" y="222" width="52" height="8" fill="#b9b094"/></g>
+<g fill="#8a6f35"><polygon points="420,246 432,240 440,246 430,252"/><polygon points="980,242 992,236 1000,242 990,248"/></g>
+</svg>
