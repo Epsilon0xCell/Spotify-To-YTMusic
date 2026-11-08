@@ -1,9 +1,11 @@
-![Intro scenery](intro-banner.png)
+![Intro scenery: the ferry docked, the first brown crate being carried down the gangplank onto the wooden quay, the remaining crates stacked in rows on the deck behind](intro-banner.png)
 
 
 # Spotify-To-YTMusic
 
-![Wordmark banner](banner.png)
+![Wordmark banner: a white ferry mid harbour crossing between two quays, brown crates of records lashed on its open deck, green water and a white wake](banner.png)
+
+<p align="center"><img src="logo.png" alt="Spotify-To-YTMusic logo: a small white ferry crossing green water seen from above its bow, brown crates stacked on the deck behind the cabin and a red life ring on the cabin front" width="200"></p>
 
 ![Animated scene](scene.svg)
 
